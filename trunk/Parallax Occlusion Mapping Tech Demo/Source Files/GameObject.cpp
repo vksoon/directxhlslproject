@@ -14,18 +14,18 @@ GameObject::GameObject()
 	m_vOldpos = 0;
 }
 
-bool GameObject::Load()
+bool GameObject::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 {
 	//load texture from file (NEW)
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Assets/rocks.jpg",
+		textureFile,
 		&m_pTexture);
 
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Assets/rocks_NM_height.tga",
+		mapFile,
 		&m_pNormalTexture);
 
-	D3DXLoadMeshFromX(L"Assets/Disc.x", D3DXMESH_SYSTEMMEM, D3DObj::Instance()->GetDeviceClass(), NULL, 
+	D3DXLoadMeshFromX(meshFile, D3DXMESH_SYSTEMMEM, D3DObj::Instance()->GetDeviceClass(), NULL, 
 		NULL, NULL, NULL, &meshBox);
 
 	m_pEffect = new Effect();

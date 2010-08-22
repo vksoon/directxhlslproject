@@ -32,7 +32,7 @@ public:
 	virtual ~GameObject() {}
 	GameObject();
 
-	virtual bool Load();
+	virtual bool Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile);
 	virtual void Render();
 	virtual void Update(float dt);
 	virtual void Clean();
