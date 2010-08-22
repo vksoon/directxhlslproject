@@ -12,9 +12,9 @@ MainState MainState::m_MainState;
 float m_angleY = 0;
 float m_angleZ = 0;
 
-D3DXVECTOR4 AmbientColour(1,1,1,1);
+D3DXVECTOR4 AmbientColour(0,0,0,0);
 D3DXVECTOR4 AmbientColour2(1,0,0,1);
-D3DXVECTOR4 DiffuseColour(0,0,0,0);
+D3DXVECTOR4 DiffuseColour(1,1,1,1);
 D3DXVECTOR4 SpecularColour(1,1,1,1);
 D3DCOLOR backgroundColour = 0x0000ff;
 
@@ -28,10 +28,10 @@ float ShadowSoftening = 0.0f;
 void MainState::Init()
 {
 	// Camera
-	CameraObj::Instance()->Load("Static");
+	CameraObj::Instance()->Load("FirstPerson");
 
 	UINT width = D3DObj::Instance()->GetParameters().BackBufferWidth;
-    UINT height = D3DObj::Instance()->GetParameters().BackBufferHeight;
+	UINT height = D3DObj::Instance()->GetParameters().BackBufferHeight;
 
 	TwInit(TW_DIRECT3D9, D3DObj::Instance()->GetDeviceClass());
 
@@ -51,12 +51,70 @@ void MainState::Init()
 
 	TwAddVarRW(pShaderBar, "backgroundColour", TW_TYPE_COLOR32, &backgroundColour, " label='Background Colour' colormode=rgb");
 
-	pCube = new GameObject();
-	pCube->Load();
+	pFloor = new GameObject();
+	pFloor->Load(L"Assets/plane.x", L"Assets/tile.jpg", L"Assets/tile.jpg"); 
 
-	pCube->SetOverallScale(1.0f);
+	pSky = new GameObject();
+	pSky->Load(L"Assets/plane.x", L"Assets/sky.jpg", L"Assets/sky.jpg"); 
 
-	GameObject::GameObjects.push_back(pCube);
+	pRightWall = new GameObject();
+	pRightWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
+
+	pLeftWall = new GameObject();
+	pLeftWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
+
+	pBackWall = new GameObject();
+	pBackWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
+
+
+	pPlayer = new Player();
+	pPlayer->Load(L"Assets/Dwarf/DwarfWithEffectInstance.x", NULL, NULL);
+
+	pFloor->SetOverallScale(1.0f);
+	pPlayer->SetOverallScale(20.0f);
+	pPlayer->SetXPosition(0.0f);
+	pPlayer->SetYPosition(-30.0f);
+	pPlayer->SetZPosition(0.0f);
+	pFloor->SetXPosition(0.0f);
+	pFloor->SetYPosition(0.0f);
+	pFloor->SetZPosition(0.0f);
+
+	pRightWall->SetZRotation(D3DX_PI / 2);
+	pRightWall->SetXPosition(25.0f);
+	pRightWall->SetYPosition(0.0f);
+	pRightWall->SetZPosition(0.0f);
+	pRightWall->SetOverallScale(1.0f);
+
+	pBackWall->SetXRotation(-D3DX_PI / 2);
+	pBackWall->SetZRotation(D3DX_PI / 2);
+	pBackWall->SetXPosition(-30.0f);
+	pBackWall->SetYPosition(0.0f);
+	pBackWall->SetZPosition(0.0f);
+	pBackWall->SetOverallScale(1.0f);
+
+	pLeftWall->SetZRotation(-D3DX_PI / 2);
+	pLeftWall->SetXPosition(-30.0f);
+	pLeftWall->SetYPosition(0.0f);
+	pLeftWall->SetZPosition(0.0f);
+	pLeftWall->SetOverallScale(1.0f);
+
+	pSky->SetZRotation(D3DX_PI);
+	pSky->SetXPosition(0.0f);
+	pSky->SetYPosition(30.0f);
+	pSky->SetZPosition(0.0f);
+	pSky->SetOverallScale(1.0f);
+	float tr = 1.0;
+	pSky->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &tr, sizeof(tr));
+
+	GameObject::GameObjects.push_back(pFloor);
+	GameObject::GameObjects.push_back(pSky);
+	GameObject::GameObjects.push_back(pRightWall);
+	GameObject::GameObjects.push_back(pLeftWall);
+	GameObject::GameObjects.push_back(pBackWall);
+	GameObject::GameObjects.push_back(pPlayer);
+
+
+	GameObject::GameObjects.push_back(pPlayer);
 }
 
 // Free textures and memory
@@ -122,16 +180,16 @@ void MainState::Update(Game* game, float dt)
 {
 	if(Active)
 	{
-	   pCube->GetEffect()->GetEffect()->SetValue("MaterialAmbientColour", &AmbientColour2, sizeof(AmbientColour2));
+		pFloor->GetEffect()->GetEffect()->SetValue("MaterialAmbientColour", &AmbientColour2, sizeof(AmbientColour2));
 	}
-	pCube->SetZRotation(m_angleZ);
-	pCube->SetYRotation(m_angleY);
-	pCube->GetEffect()->GetEffect()->SetValue("MaterialAmbientColour", &AmbientColour, sizeof(AmbientColour));
-	pCube->GetEffect()->GetEffect()->SetValue("MaterialDiffuseColour", &DiffuseColour, sizeof(DiffuseColour));
-	pCube->GetEffect()->GetEffect()->SetValue("MaterialSpecularColour", &SpecularColour, sizeof(SpecularColour));
-	pCube->GetEffect()->GetEffect()->SetValue("HeightMapScale", &HeightMapScale, sizeof(HeightMapScale));
-	pCube->GetEffect()->GetEffect()->SetValue("SpecularExponent", &SpecularExponent, sizeof(SpecularExponent));
-	pCube->GetEffect()->GetEffect()->SetValue("ShadowSoftening", &ShadowSoftening, sizeof(ShadowSoftening));
+	pPlayer->SetZRotation(m_angleZ);
+	pFloor->SetYRotation(m_angleY);
+	pFloor->GetEffect()->GetEffect()->SetValue("MaterialAmbientColour", &AmbientColour, sizeof(AmbientColour));
+	pFloor->GetEffect()->GetEffect()->SetValue("MaterialDiffuseColour", &DiffuseColour, sizeof(DiffuseColour));
+	pFloor->GetEffect()->GetEffect()->SetValue("MaterialSpecularColour", &SpecularColour, sizeof(SpecularColour));
+	pFloor->GetEffect()->GetEffect()->SetValue("HeightMapScale", &HeightMapScale, sizeof(HeightMapScale));
+	pFloor->GetEffect()->GetEffect()->SetValue("SpecularExponent", &SpecularExponent, sizeof(SpecularExponent));
+	pFloor->GetEffect()->GetEffect()->SetValue("ShadowSoftening", &ShadowSoftening, sizeof(ShadowSoftening));
 
 	for(unsigned int i = 0;i < GameObject::GameObjects.size();i++) {
 		if(!GameObject::GameObjects[i]) continue;

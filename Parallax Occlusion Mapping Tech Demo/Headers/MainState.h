@@ -7,6 +7,7 @@
 
 #include "GameState.h"
 #include "GameObject.h"
+#include "Player.h"
 #include "Camera.h"
 
 class MainState : public GameState
@@ -33,7 +34,12 @@ protected:
 private:
 	static MainState m_MainState;
 
-	GameObject * pCube;
+	GameObject * pFloor;
+	GameObject * pPlayer;
+	GameObject * pRightWall;
+	GameObject * pLeftWall;
+	GameObject * pBackWall;
+	GameObject * pSky;
 };
 
 #endif

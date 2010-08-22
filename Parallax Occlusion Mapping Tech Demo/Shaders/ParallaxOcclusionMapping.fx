@@ -14,11 +14,11 @@ texture HeightMapTexture;
 
 // Material Properties //
 
-float4 MaterialAmbientColour = float4(1,1,1,1); // Ambient colour of the material
+float4 MaterialAmbientColour = float4(0.5,0.5,0.5,0.5); // Ambient colour of the material
 float4 MaterialDiffuseColour = float4(1,1,1,1); // Diffuse colour of the material
 float4 MaterialSpecularColour = float4(1,1,1,1); // Specular colour of the material
 
-float SpecularExponent = 1000.0; // Specular exponent of material 
+float SpecularExponent = 10000.0; // Specular exponent of material 
 // Lower colour means larger highlight
 
 // Light Values //
@@ -28,8 +28,8 @@ float4 DiffuseColour = float4(1,1,1,1); // Lights diffuse colour
 float4 AmbientColour = float4(1,1,1,1); // Lights ambient colour
 
 float4 EyeLocation;// = float4(1,0,0,0); // Location of camera
-float BaseTextureRepeat = 1.0; // Amount to repeat texture
-float HeightMapScale = 0.1;
+float BaseTextureRepeat = 5.0; // Amount to repeat texture
+float HeightMapScale = 0.02;
 
 // Matrices //
 float4x4 World;

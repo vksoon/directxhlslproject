@@ -5,8 +5,8 @@ Camera::~Camera() {}
 bool Camera::Load(LPCSTR type)
 {
 	m_type = type;
-	m_vEyePoint = D3DXVECTOR3(70.0f,0.0f,260.0f);
-	m_vLookAtPoint = D3DXVECTOR3(35.0f,-10.0f,0.0f);
+	m_vEyePoint = D3DXVECTOR3(0.0f,0.0f,-150.0f);
+	m_vLookAtPoint = D3DXVECTOR3(0.0f,0.0f,0.0f);
 	m_vUp = D3DXVECTOR3(0.0f,1.0f,0.0f);
 	m_fSpeed = 1.0f;
 	D3DXMatrixPerspectiveFovLH(&matProjection,
