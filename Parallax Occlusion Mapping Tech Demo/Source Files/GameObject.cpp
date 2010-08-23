@@ -5,7 +5,6 @@ std::vector<GameObject*> GameObject::GameObjects;
 GameObject::GameObject()
 {
 	m_pVBuffer = NULL;
-	m_pIBuffer = NULL;
 	m_pTexture = NULL;
 
 	m_vPos = 0;
@@ -26,7 +25,7 @@ bool GameObject::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 		&m_pNormalTexture);
 
 	D3DXLoadMeshFromX(meshFile, D3DXMESH_SYSTEMMEM, D3DObj::Instance()->GetDeviceClass(), NULL, 
-		NULL, NULL, NULL, &meshBox);
+		NULL, NULL, NULL, &m_pMesh);
 
 	m_pEffect = new Effect();
 
@@ -47,21 +46,21 @@ bool GameObject::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 	LPD3DXMESH tempMesh;
 
 	DWORD* rgdwAdjacency = NULL;
-	rgdwAdjacency = new DWORD[ meshBox->GetNumFaces() * 3 ];
+	rgdwAdjacency = new DWORD[ m_pMesh->GetNumFaces() * 3 ];
 
-	meshBox->GenerateAdjacency( 1e-6f, rgdwAdjacency );
+	m_pMesh->GenerateAdjacency( 1e-6f, rgdwAdjacency );
 
-	D3DXCleanMesh(D3DXCLEAN_BOWTIES, meshBox, rgdwAdjacency, &tempMesh, rgdwAdjacency, NULL);
+	D3DXCleanMesh(D3DXCLEAN_BOWTIES, m_pMesh, rgdwAdjacency, &tempMesh, rgdwAdjacency, NULL);
 
-	meshBox = tempMesh;
+	m_pMesh = tempMesh;
 
 	tempMesh->Release();
 
 	LPD3DXMESH clonedMesh, newMesh;
 
-	meshBox->CloneMesh(D3DXMESH_VB_MANAGED, decl, D3DObj::Instance()->GetDeviceClass(), &clonedMesh);
+	m_pMesh->CloneMesh(D3DXMESH_VB_MANAGED, decl, D3DObj::Instance()->GetDeviceClass(), &clonedMesh);
 
-	meshBox->Release();
+	m_pMesh->Release();
 
 	D3DXComputeNormals(clonedMesh, rgdwAdjacency);
 
@@ -72,7 +71,7 @@ bool GameObject::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 
 	clonedMesh->Release();
 
-	meshBox = newMesh;
+	m_pMesh = newMesh;
 	newMesh = 0;
 
 	return true;
@@ -141,7 +140,7 @@ void GameObject::Render()
 		m_pEffect->GetEffect()->BeginPass(iPass);
 
 		// Draw the mesh subset
-		meshBox->DrawSubset(0);
+		m_pMesh->DrawSubset(0);
 
 		m_pEffect->GetEffect()->EndPass();
 	}
@@ -156,7 +155,7 @@ Effect* GameObject::GetEffect()
 
 void GameObject::Clean()
 {
-	meshBox->Release();
+	m_pMesh->Release();
 	m_pTexture->Release();
 	m_pNormalTexture->Release();
 	//m_pVBuffer->Release();

@@ -97,13 +97,12 @@ protected:
 	Effect* m_pEffect;
 
 	LPDIRECT3DVERTEXBUFFER9 m_pVBuffer;
-	LPDIRECT3DINDEXBUFFER9 m_pIBuffer;
 	LPDIRECT3DTEXTURE9 m_pTexture;
 	LPDIRECT3DTEXTURE9 m_pNormalTexture;
 
 	LPDIRECT3DVERTEXDECLARATION9 m_pVertexDeclaration;
 
-	LPD3DXMESH meshBox;    // define the mesh pointer
+	LPD3DXMESH m_pMesh;    // define the mesh pointer
 
 };
 typedef std::vector<GameObject*>  GameObjects;

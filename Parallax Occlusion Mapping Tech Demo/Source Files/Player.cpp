@@ -2,12 +2,21 @@
 
 bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 {
+	armorBump = NULL;
+	bodyBump = NULL;
+	headBump = NULL;
+	headgearBump = NULL;
+	helmetBump = NULL;
+	packBump = NULL;
+	weaponsBump = NULL;
+
 	// Create a place to store the effect
 	m_pEffect = new Effect();
 
 	// Load the shader effect file
 	m_pEffect->Load(L"Shaders/BumpMapping.fx");
 
+	
 	// Massive Hack // shudder!
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
 		L"Armor_bumpmap.dds",
@@ -31,18 +40,19 @@ bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 		L"Weapons_bumpmap.dds",
 		&weaponsBump);
 
-	 textures[0] = weaponsBump;
-	 textures[1] = packBump;
-	 textures[2] = bodyBump;
-	 textures[3] = bodyBump;
-	 textures[4] = bodyBump;
-	 textures[5] = bodyBump;
-	 textures[6] = armorBump;
-	 textures[7] = headgearBump;
-	 textures[8] = headBump;
-	 // end of massive hack
+	textures[0] = weaponsBump;
+	textures[1] = packBump;
+	textures[2] = bodyBump;
+	textures[3] = bodyBump;
+	textures[4] = bodyBump;
+	textures[5] = bodyBump;
+	textures[6] = armorBump;
+	textures[7] = headgearBump;
+	textures[8] = headBump;
+	// end of massive hack // Memory Leaks!!!!
+	
 
-	 // Vertex Declaration // Easier than hacking tangents into FVF structures
+	// Vertex Declaration // Easier than hacking tangents into FVF structures
 	D3DVERTEXELEMENT9 decl[] = 
 	{
 		{ 0, 0,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
@@ -119,18 +129,6 @@ bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 			D3DXCreateTextureFromFileA( D3DObj::Instance()->GetDeviceClass(),
 				d3dxMaterials[i].pTextureFilename,
 				&m_pMeshTextures[i]);
-			{
-				// If texture is not in current folder, try parent folder
-				const CHAR* strPrefix = "..\\";
-				CHAR strTexture[MAX_PATH];
-				strcpy_s( strTexture, MAX_PATH, strPrefix );
-				strcat_s( strTexture, MAX_PATH, d3dxMaterials[i].pTextureFilename );
-				// If texture is not in current folder, try parent folder
-				D3DXCreateTextureFromFileA( D3DObj::Instance()->GetDeviceClass(),
-					strTexture,
-					&m_pMeshTextures[i]);
-
-			}
 		}
 	}
 
@@ -208,7 +206,7 @@ void Player::Render()
 			D3DObj::Instance()->GetDeviceClass()->SetTexture(0,m_pMeshTextures[i]);
 			m_pEffect->GetEffect()->SetTexture("ModelTexture", m_pMeshTextures[i]);
 			m_pEffect->GetEffect()->CommitChanges();
-	        m_pEffect->GetEffect()->SetTexture("NormalMap", textures[i]);
+			m_pEffect->GetEffect()->SetTexture("NormalMap", textures[i]);
 			m_pEffect->GetEffect()->CommitChanges();
 
 			// Draw the mesh subset
@@ -223,6 +221,7 @@ void Player::Render()
 void Player::Update(float dt)
 {
 	GameObject::Update(dt);
+
 }
 
 void Player::Clean()

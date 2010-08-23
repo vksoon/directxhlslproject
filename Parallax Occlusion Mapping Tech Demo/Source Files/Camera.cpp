@@ -84,6 +84,7 @@ void Camera::Update()
 	Rotate();
 	Move();
 	}
+	
 
 	D3DXMatrixLookAtLH(&m_matView, &m_vEyePoint, &m_vLookAtPoint, &m_vUp);
 

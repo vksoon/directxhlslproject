@@ -16,7 +16,6 @@ public:
 
 private:
 
-	LPD3DXMESH          m_pMesh;
 	D3DMATERIAL9  *m_pMeshMaterials;
 	LPDIRECT3DTEXTURE9 *m_pMeshTextures;
 	DWORD              m_dwNumMaterials;
