@@ -35,11 +35,15 @@ private:
 	static MainState m_MainState;
 
 	GameObject * pFloor;
+	GameObject * pBottomFloor;
 	GameObject * pPlayer;
 	GameObject * pRightWall;
 	GameObject * pLeftWall;
 	GameObject * pBackWall;
+	GameObject * pFrontWall;
 	GameObject * pSky;
+
+	float waterMovement;
 };
 
 #endif

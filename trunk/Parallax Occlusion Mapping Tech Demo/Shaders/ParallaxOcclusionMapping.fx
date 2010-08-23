@@ -14,7 +14,9 @@ texture HeightMapTexture;
 
 // Material Properties //
 
-float4 MaterialAmbientColour = float4(0.5,0.5,0.5,0.5); // Ambient colour of the material
+float dt;
+
+float4 MaterialAmbientColour = float4(0.2,0.2,0.2,0.2); // Ambient colour of the material
 float4 MaterialDiffuseColour = float4(1,1,1,1); // Diffuse colour of the material
 float4 MaterialSpecularColour = float4(1,1,1,1); // Specular colour of the material
 
@@ -23,7 +25,7 @@ float SpecularExponent = 10000.0; // Specular exponent of material
 
 // Light Values //
 
-float3 LightDirection = float3(0,0,1); // Direction of light in world space
+float3 LightDirection = float3(0,1,0); // Direction of light in world space
 float4 DiffuseColour = float4(1,1,1,1); // Lights diffuse colour
 float4 AmbientColour = float4(1,1,1,1); // Lights ambient colour
 
@@ -41,6 +43,8 @@ float2 TextureDimensions = float2(512,512);
 int LevelOfDetailThreshold = 100.0;  // Used for performance enhancement
 
 float ShadowSoftening = 0.5;
+
+bool transparency = false;
 
 int MinSamples = 8;
 int MaxSamples = 50;
@@ -96,8 +100,8 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	// Transform position to world space
 	output.Position = mul(input.Position, WorldViewProjection);
 	
-	// Send texture coordinates through
-	output.TextureCoordinate = input.TextureCoordinate * BaseTextureRepeat;
+	// Send texture coordinates through // and dt if moving texture
+	output.TextureCoordinate = (input.TextureCoordinate + dt) * BaseTextureRepeat;
 	
 	// Transform Normal, Tangent and Binormal to homogenous clip space
 	float3 NormalWorldSpace = mul(input.Normal, (float3x3) World);
@@ -293,6 +297,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    
    // Sample base map
    float4 BaseColour = tex2D( BaseSampler, TextureSample );
+   BaseColour.a = 0.1;
    
    // Compute diffuse color component:
    float3 LightTangentSpaceAdj = float3( LightTangentSpace.x, -LightTangentSpace.y, LightTangentSpace.z );
@@ -302,7 +307,8 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    // Compute the specular component 
    float4 Specular = 0;
    float3 ReflectionTangentSpace = normalize( 2 * dot( ViewTangentSpace, NormalTangentSpace ) * NormalTangentSpace - ViewTangentSpace );
-           
+       
+   
    float RdotL = saturate( dot( ReflectionTangentSpace, LightTangentSpaceAdj ));
    Specular = saturate( pow( RdotL, SpecularExponent )) * MaterialSpecularColour;
 
@@ -310,16 +316,20 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    // Composite the final color:
    float4 FinalColour = (( MaterialAmbientColour + Diffuse ) * BaseColour + Specular ) * OcclusionShadow; 
   
-	ResultColour = FinalColour;
+   ResultColour.rgb = FinalColour;
+   ResultColour.a = 0.5;
 	
-	return ResultColour;
+   return ResultColour;
 		
 }
 
 technique ParallaxOcclusionMapping
 {
     pass P0
-    {          
+    {
+		AlphaBlendEnable = transparency;
+		SrcBlend = SrcAlpha;
+		DestBlend = InvSrcAlpha;     
         VertexShader = compile vs_3_0 VertexShaderFunction();
         PixelShader  = compile ps_3_0 PixelShaderFunction(); 
     }
