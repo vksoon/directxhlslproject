@@ -23,17 +23,17 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hCursor = LoadCursor(NULL, IDC_CROSS);
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-    wc.lpszClassName = L"WindowClass";
+    wc.lpszClassName = "WindowClass";
 
 	RegisterClassEx(&wc);
 
     hWnd = CreateWindowEx(NULL,
-                          L"WindowClass",
-                          L"Parallax Occlusion Mapping",
-                          WS_OVERLAPPEDWINDOW,
-                          0, 0,
+                          "WindowClass",
+                          "Parallax Occlusion Mapping",
+                          WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+                          300, 10,
                           800, 800,
                           NULL,
                           NULL,
@@ -44,10 +44,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	D3DObj::Instance()->Init(hWnd);
 
-	Game game;
-
-	game.Init();
-	game.ChangeState(MainState::Instance());
+	GameInst::Instance()->Init();
+	GameInst::Instance()->ChangeState(MainState::Instance());
 
 	// enter the main loop:
 
@@ -78,9 +76,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		QueryPerformanceCounter((LARGE_INTEGER*)&currentTimestamp);
 		float dt = (currentTimestamp  - prevTimestamp)* secsPerCount;
 
-		game.Update(dt);
-		game.Render();
-		game.HandleInput();
+		GameInst::Instance()->Update(dt);
+		GameInst::Instance()->Draw();
+		GameInst::Instance()->HandleInput();
+
 		CameraObj::Instance()->Update();
 		
 		prevTimestamp = currentTimestamp;
@@ -88,7 +87,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     // clean up DirectX and COM
 	D3DObj::Instance()->Clean();
-	game.Clean();
+	GameInst::Instance()->Clean();
 
     return msg.wParam;
 }

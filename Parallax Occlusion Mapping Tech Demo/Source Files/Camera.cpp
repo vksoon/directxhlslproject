@@ -5,16 +5,16 @@ Camera::~Camera() {}
 bool Camera::Load(LPCSTR type)
 {
 	m_type = type;
-	m_vEyePoint = D3DXVECTOR3(0.0f,0.0f,-150.0f);
+	m_vEyePoint = D3DXVECTOR3(0.0f,0.0f,-100.0f);
 	m_vLookAtPoint = D3DXVECTOR3(0.0f,0.0f,0.0f);
 	m_vUp = D3DXVECTOR3(0.0f,1.0f,0.0f);
-	m_fSpeed = 1.0f;
+	m_fSpeed = 3.0f;
 	D3DXMatrixPerspectiveFovLH(&matProjection,
-                               D3DXToRadian(45),    // the horizontal field of view
-                               (float)800/(float)800, // aspect ratio
-                               1.0f,    // the near view-plane
-                               1000.0f);    // the far view-plane
-    D3DObj::Instance()->GetDeviceClass()->SetTransform(D3DTS_PROJECTION, &matProjection);     // set the projection
+		D3DXToRadian(45),    // the horizontal field of view
+		(float)D3DObj::Instance()->GetParameters().BackBufferWidth/(float)D3DObj::Instance()->GetParameters().BackBufferHeight, // aspect ratio
+		1.0f,    // the near view-plane
+		1000.0f);    // the far view-plane
+	D3DObj::Instance()->GetDeviceClass()->SetTransform(D3DTS_PROJECTION, &matProjection);     // set the projection
 
 	return true;
 }
@@ -22,6 +22,7 @@ bool Camera::Load(LPCSTR type)
 void Camera::Move()
 {
 	D3DXVECTOR3 vDirection;
+	D3DXVECTOR3 nextPos;
 
 	D3DXVec3Normalize(&vDirection, &(m_vLookAtPoint - m_vEyePoint)); // camera direction vector
 
@@ -77,14 +78,23 @@ void Camera::Rotate()
 
 }
 
+void Camera::SetPosition(float x, float y, float z)
+{
+	m_vEyePoint = D3DXVECTOR3(x,y,z);
+}
+
+void Camera::SetLookat(float x, float y, float z)
+{
+	m_vLookAtPoint = D3DXVECTOR3(x,y,z);
+}
+
 void Camera::Update()
 {
 	if(m_type == "FirstPerson")
 	{
-	Rotate();
-	Move();
+		Rotate();
 	}
-	
+	Move();
 
 	D3DXMatrixLookAtLH(&m_matView, &m_vEyePoint, &m_vLookAtPoint, &m_vUp);
 

@@ -56,6 +56,6 @@ D3DPRESENT_PARAMETERS D3DObject::GetParameters() const
 HWND D3DObject::GetWindowHandle() const
 {
 	HWND hWnd;
-	hWnd = FindWindow(NULL, L"hWnd");
+	hWnd = FindWindow(NULL, "hWnd");
 	return hWnd;
 }

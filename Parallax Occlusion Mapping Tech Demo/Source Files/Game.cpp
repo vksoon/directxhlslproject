@@ -7,15 +7,6 @@
 
 void Game::Init()
 {
-	//D3DObj::Instance()->GetDeviceClass()->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-	//D3DObj::Instance()->GetDeviceClass()->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-	//D3DObj::Instance()->GetDeviceClass()->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-
-	//D3DObj::Instance()->GetDeviceClass()->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
-	//D3DObj::Instance()->GetDeviceClass()->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
-	//D3DObj::Instance()->GetDeviceClass()->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR );
-
-
 	InputManagerObj::Instance()->InitInputManager();
 	InputManagerObj::Instance()->InitKeyboard();
 	InputManagerObj::Instance()->InitMouse();
@@ -28,8 +19,6 @@ void Game::Clean()
 		states.back()->Clean();
 		states.pop_back();
 	}
-	InputManagerObj::Instance()->Clean();
-	TwTerminate();
 }
 
 void Game::ChangeState(GameState* state)
@@ -69,9 +58,9 @@ void Game::PopState()
 	}
 }
 
-void Game::Render()
+void Game::Draw()
 {
-	states.back()->Render(this);
+	states.back()->Draw(this);
 }
 
 void Game::HandleInput()
@@ -88,3 +77,4 @@ void Game::HandleCollisions ()
 {
 	states.back()->HandleCollisions(this);
 }
+

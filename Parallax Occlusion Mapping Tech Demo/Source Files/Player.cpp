@@ -1,7 +1,38 @@
 #include "../Headers/Player.h"
 
-bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
+bool Player::Load(File * pFile)
 {
+	std::string id;
+	std::string meshFile, shaderConfigFile;
+	float xrot,yrot,zrot,xpos,ypos,zpos,xscale,yscale,zscale, uniformscale;
+
+	pFile->GetString(&id);
+	pFile->GetString(&meshFile);
+	pFile->GetString(&shaderConfigFile);
+	pFile->GetFloat(&xrot);
+	pFile->GetFloat(&yrot);
+	pFile->GetFloat(&zrot);
+	pFile->GetFloat(&xscale);
+	pFile->GetFloat(&yscale);
+	pFile->GetFloat(&zscale);
+	pFile->GetFloat(&xpos);
+	pFile->GetFloat(&ypos);
+	pFile->GetFloat(&zpos);
+	pFile->GetFloat(&uniformscale);
+
+	SetXRotation(xrot);
+	SetYRotation(yrot);
+	SetZRotation(zrot);
+	SetXPosition(xpos);
+	SetYPosition(ypos);
+	SetZPosition(zpos);
+	SetXScale(xscale);
+	SetYScale(yscale);
+	SetZScale(zscale);
+	SetOverallScale(uniformscale);
+
+	m_id = id;
+
 	armorBump = NULL;
 	bodyBump = NULL;
 	headBump = NULL;
@@ -10,46 +41,51 @@ bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 	packBump = NULL;
 	weaponsBump = NULL;
 
-	// Create a place to store the effect
-	m_pEffect = new Effect();
+	// Create an Effect Factory and Register some Creator Objects
+	Factory<Effect> EffectFactory;
+	EffectFactory.Register("BumpMapEffect", new Creator<BumpMapEffect, Effect>);
 
-	// Load the shader effect file
-	m_pEffect->Load(L"Shaders/BumpMapping.fx");
+	// Create the Lighting Effect file
+	m_pBumpMapEffect = EffectFactory.Create("BumpMapEffect");
+	assert(!_stricmp(m_pBumpMapEffect->GetClassName(), "BumpMapEffect")); // Check the class name exists
 
-	
-	// Massive Hack // shudder!
+	m_pBumpMapEffect->Load("Shaders/BumpMapping.fx");
+	m_pBumpMapEffect->LoadValuesFromConfig(shaderConfigFile);
+
+	/* Adding bump map textures to .x didn't seem to be possible as it only supports
+	   one texture per material, so I added an array of bump map textures that are
+	   applied in the same order as the textures loaded from the .x file */
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Armor_bumpmap.dds",
+		"Assets/Dwarf/Armor_bumpmap.dds",
 		&armorBump);
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Body_bumpmap.dds",
+		"Assets/Dwarf/Body_bumpmap.dds",
 		&bodyBump);
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"DwarfHead_bumpmap.dds",
+		"Assets/Dwarf/DwarfHead_bumpmap.dds",
 		&headBump);
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Headgear_bumpmap.dds",
+		"Assets/Dwarf/Headgear_bumpmap.dds",
 		&headgearBump);
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Helmet_bumpmap.dds",
+		"Assets/Dwarf/Helmet_bumpmap.dds",
 		&helmetBump);
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Pack_bumpmap.dds",
+		"Assets/Dwarf/Pack_bumpmap.dds",
 		&packBump);
 	D3DXCreateTextureFromFile(D3DObj::Instance()->GetDeviceClass(),
-		L"Weapons_bumpmap.dds",
+		"Assets/Dwarf/Weapons_bumpmap.dds",
 		&weaponsBump);
 
-	textures[0] = weaponsBump;
-	textures[1] = packBump;
-	textures[2] = bodyBump;
-	textures[3] = bodyBump;
-	textures[4] = bodyBump;
-	textures[5] = bodyBump;
-	textures[6] = armorBump;
-	textures[7] = headgearBump;
-	textures[8] = headBump;
-	// end of massive hack // Memory Leaks!!!!
+	m_bumpTextures[0] = weaponsBump;
+	m_bumpTextures[1] = packBump;
+	m_bumpTextures[2] = bodyBump;
+	m_bumpTextures[3] = bodyBump;
+	m_bumpTextures[4] = bodyBump;
+	m_bumpTextures[5] = bodyBump;
+	m_bumpTextures[6] = armorBump;
+	m_bumpTextures[7] = headgearBump;
+	m_bumpTextures[8] = headBump;
 	
 
 	// Vertex Declaration // Easier than hacking tangents into FVF structures
@@ -69,15 +105,18 @@ bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 	LPD3DXBUFFER pD3DXMtrlBuffer;
 
 	// Load the mesh from the specified file
-	D3DXLoadMeshFromX( meshFile, D3DXMESH_SYSTEMMEM,
+	if( FAILED(D3DXLoadMeshFromX( meshFile.c_str(), D3DXMESH_MANAGED,
 		D3DObj::Instance()->GetDeviceClass(), NULL,
 		&pD3DXMtrlBuffer, NULL, &m_dwNumMaterials,
-		&m_pMesh );
+		&m_pMesh )))
+	{
+		MessageBox(NULL, "Could not find player mesh file!", "Mesh Loading", MB_OK);
+	}
 
 	LPD3DXMESH tempMesh;
 
 	DWORD* rgdwAdjacency = NULL;
-	rgdwAdjacency = new DWORD[ m_pMesh->GetNumFaces() * 3 ];
+	rgdwAdjacency = new DWORD[ m_pMesh->GetNumFaces() * 3];
 
 	m_pMesh->GenerateAdjacency( 1e-6f, rgdwAdjacency );
 
@@ -137,7 +176,7 @@ bool Player::Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile)
 	return true;
 }
 
-void Player::Render()
+void Player::Draw()
 {
 	D3DXMatrixTranslation(&m_matTranslate, this->GetXPosition(), this->GetYPosition(), this->GetZPosition());
 	D3DXMatrixScaling(&m_matScaling, this->GetXScale(), this->GetYScale(), this->GetZScale());
@@ -155,8 +194,6 @@ void Player::Render()
 
 	D3DXMatrixMultiply(&mWorld, &m_matRot, &m_matTranslate);
 
-	D3DObj::Instance()->GetDeviceClass()->SetTransform( D3DTS_WORLD, &mWorld);
-
 	D3DObj::Instance()->GetDeviceClass()->SetVertexDeclaration(m_pVertexDeclaration);
 
 	// select the vertex buffer to display
@@ -173,12 +210,12 @@ void Player::Render()
 
 	D3DXMATRIX EyePoint = CameraObj::Instance()->GetEyePoint();
 
-	m_pEffect->GetEffect()->SetValue("ViewVector", &EyePoint, sizeof(EyePoint));
+	m_pBumpMapEffect->GetEffect()->SetValue("ViewVector", &EyePoint, sizeof(EyePoint));
 
-	m_pEffect->GetEffect()->SetValue("World", &mWorld, sizeof(mWorld));
-	m_pEffect->GetEffect()->SetValue("Projection", &mProjection, sizeof(mProjection));
+	m_pBumpMapEffect->GetEffect()->SetValue("World", &mWorld, sizeof(mWorld));
+	m_pBumpMapEffect->GetEffect()->SetValue("Projection", &mProjection, sizeof(mProjection));
 
-	m_pEffect->GetEffect()->SetValue("View", &mView, sizeof(mView));
+	m_pBumpMapEffect->GetEffect()->SetValue("View", &mView, sizeof(mView));
 
 	// Get Inverse Transpose of World Matrix
 	D3DXMATRIX m;
@@ -187,35 +224,35 @@ void Player::Render()
 	D3DXMatrixTranspose(&j, &m );
 	D3DXMATRIX inv = j;
 
-	m_pEffect->GetEffect()->SetMatrix("WorldInverseTranspose", &inv);
+	m_pBumpMapEffect->GetEffect()->SetMatrix("WorldInverseTranspose", &inv);
 
-	m_pEffect->GetEffect()->SetTechnique("BumpMapped");
+	m_pBumpMapEffect->GetEffect()->SetTechnique("BumpMapped");
 
 	UINT iPass, cPasses;
 
-	m_pEffect->GetEffect()->Begin(&cPasses,0);
+	m_pBumpMapEffect->GetEffect()->Begin(&cPasses,0);
 
 	for(iPass = 0; iPass < cPasses; iPass++)
 	{
-		m_pEffect->GetEffect()->BeginPass(iPass);
+		m_pBumpMapEffect->GetEffect()->BeginPass(iPass);
 
 		for (DWORD i=0; i < m_dwNumMaterials; i++)
 		{
 			// Set the material and texture for this subset
 			D3DObj::Instance()->GetDeviceClass()->SetMaterial(&m_pMeshMaterials[i]);
 			D3DObj::Instance()->GetDeviceClass()->SetTexture(0,m_pMeshTextures[i]);
-			m_pEffect->GetEffect()->SetTexture("ModelTexture", m_pMeshTextures[i]);
-			m_pEffect->GetEffect()->CommitChanges();
-			m_pEffect->GetEffect()->SetTexture("NormalMap", textures[i]);
-			m_pEffect->GetEffect()->CommitChanges();
+			m_pBumpMapEffect->GetEffect()->SetTexture("ModelTexture", m_pMeshTextures[i]);
+			m_pBumpMapEffect->GetEffect()->CommitChanges();
+			m_pBumpMapEffect->GetEffect()->SetTexture("NormalMap", m_bumpTextures[i]);
+			m_pBumpMapEffect->GetEffect()->CommitChanges();
 
 			// Draw the mesh subset
 			m_pMesh->DrawSubset( i );
 		}
 
-		m_pEffect->GetEffect()->EndPass();
+		m_pBumpMapEffect->GetEffect()->EndPass();
 	}
-	m_pEffect->GetEffect()->End();
+	m_pBumpMapEffect->GetEffect()->End();
 }
 
 void Player::Update(float dt)
@@ -226,4 +263,14 @@ void Player::Update(float dt)
 
 void Player::Clean()
 {
+	for( DWORD i = 0; i < m_dwNumMaterials; i++ )
+	{
+		m_pMeshTextures[i]->Release();
+	}
+	m_pMesh->Release();
+}
+
+Effect* Player::GetEffect()
+{
+	return m_pBumpMapEffect;
 }

@@ -3,12 +3,12 @@ float4x4 View;
 float4x4 Projection;
 float4x4 WorldInverseTranspose;
  
-float4 AmbientColor = float4(0, 0, 0, 1);
+float4 AmbientColour;// = float4(0, 0, 0, 1);
 float AmbientIntensity = 0.1;
  
 float3 DiffuseLightDirection = float3(0, 1, 0);
-float4 DiffuseColor = float4(0.2, 0.2, 0.2, 1);
-float DiffuseIntensity = 1.0;
+float4 DiffuseColor = float4(0.7, 0.7, 1.0, 1);
+float DiffuseIntensity = 0.1;
  
 float Shininess = 200;
 float4 SpecularColor = float4(1, 1, 1, 1);
@@ -63,7 +63,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
     output.Normal = normalize(mul(input.Normal, WorldInverseTranspose));
     output.Tangent = normalize(mul(input.Tangent, WorldInverseTranspose));
     output.Binormal = normalize(mul(input.Binormal, WorldInverseTranspose));
- 
+    
     output.TextureCoordinate = input.TextureCoordinate;
     return output;
 }
@@ -88,14 +88,13 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
     float dotProduct = dot(r, v);
  
     float4 specular = SpecularIntensity * SpecularColor * max(pow(dotProduct, Shininess), 0) * diffuseIntensity;
- 
 
     // Calculate the texture color
     float4 textureColor = tex2D(textureSampler, input.TextureCoordinate);
     textureColor.a = 1;
  
     // Combine all of these values into one (including the ambient light)
-    return saturate(textureColor * (diffuseIntensity) + AmbientColor * AmbientIntensity + specular);
+    return saturate(textureColor * (diffuseIntensity) + AmbientColour * AmbientIntensity + specular);
 }
  
 technique BumpMapped
