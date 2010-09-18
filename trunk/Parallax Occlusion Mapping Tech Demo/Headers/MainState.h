@@ -1,5 +1,13 @@
 /*
-	MainState
+--------------------
+| GameState (Base)|
+--------------------
+|
+----------------------
+| MainState (Derived)|
+----------------------
+
+MainState Class
 */
 
 #ifndef MAINSTATE_H
@@ -8,42 +16,47 @@
 #include "GameState.h"
 #include "GameObject.h"
 #include "Player.h"
+#include "MapObject.h"
+#include "SkyBox.h"
 #include "Camera.h"
+#include "Factory.h"
+#include <map>
+#include <string>
+#include "../Headers/ConfigFile.h"
 
 class MainState : public GameState
 {
 public:
-	void Init();
+
+	bool Init();
 	void Clean();
-	
+
 	void Pause();
 	void Resume();
-	
+
 	void HandleInput(Game* game);
 	void HandleCollisions(Game* game);
 	void Update(Game* game, float dt);
-	void Render(Game* game);
-	
+	void Draw(Game* game);
+
 	static MainState* Instance() {
 		return &m_MainState;
 	}
-	
+
 protected:
-		MainState() { }
-	
+	MainState() { }
+
 private:
 	static MainState m_MainState;
 
-	GameObject * pFloor;
-	GameObject * pBottomFloor;
-	GameObject * pPlayer;
-	GameObject * pRightWall;
-	GameObject * pLeftWall;
-	GameObject * pBackWall;
-	GameObject * pFrontWall;
-	GameObject * pSky;
-
 	float waterMovement;
+
+	// Values for TweakBar 
+	float depth;
+	int MinSamples;
+	int MaxSamples;
+	float TextureRepeat; 
+	int LevelOfDetailThreshold;
 };
 
 #endif

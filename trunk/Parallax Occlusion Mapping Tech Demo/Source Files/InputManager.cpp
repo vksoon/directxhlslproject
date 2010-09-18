@@ -20,8 +20,8 @@ void InputManager::Clean()
 
 bool InputManager::InitInputManager()
 {
-	m_fCursorX = (float)800 / 2;
-	m_fCursorY = (float)800 / 2;
+	m_fCursorX = (float)D3DObj::Instance()->GetParameters().BackBufferWidth / 2;
+	m_fCursorY = (float)D3DObj::Instance()->GetParameters().BackBufferHeight / 2;
 
 	if(FAILED(DirectInput8Create(GetModuleHandle(NULL),
 		DIRECTINPUT_VERSION,
@@ -83,6 +83,9 @@ bool InputManager::InitMouse()
 		return false;
 	}
 
+	SetCapture(D3DObj::Instance()->GetWindowHandle());
+
+
 	MouseCapabilities.dwSize = sizeof(MouseCapabilities);
 	m_pMouseDevice->GetCapabilities(&MouseCapabilities);
 
@@ -94,6 +97,7 @@ bool InputManager::InitMouse()
 	m_dwAxes = MouseCapabilities.dwAxes;
 	m_dwButtons = MouseCapabilities.dwButtons;
 
+	SetCursor("Assets/stones.bmp",0,0,0xffffffff);
 	SetAttributes(false, 1.0f);
 
 	return true;

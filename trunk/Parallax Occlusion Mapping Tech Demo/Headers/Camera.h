@@ -19,9 +19,14 @@ class Camera
 		void Move();
 		void Rotate();
 
+		void SetPosition(float x, float y, float z);
+		void SetLookat(float x, float y, float z);
+
 		D3DXMATRIX GetViewMatrix();
 		D3DXMATRIX GetProjectionMatrix();
 		D3DXMATRIX GetWorldMatrix();
+
+		void SetType(std::string cameraType) { m_type = cameraType; }
 
 		D3DXVECTOR3 GetEyePoint() const;
 

@@ -1,6 +1,11 @@
 /*
-Game Object Base Class
-Shaun Mitchell
+    ----------------
+	| Effect (Base)|
+	----------------
+
+	Derive specific effects
+
+	Shaun Mitchell
 */
 #ifndef EFFECT_H_
 #define EFFECT_H_
@@ -9,7 +14,6 @@ Shaun Mitchell
 #include <string>
 #include "D3DObject.h"
 
-// Effect Base Class, Derive specific effects
 class Effect
 {
 public:
@@ -18,8 +22,10 @@ public:
 	virtual ~Effect() { m_pEffect->Release(); }
 	virtual const char * GetClassName() { return "Effect";}
 
-	virtual void Load(LPCWSTR filename);
-	ID3DXEffect* GetEffect();
+	virtual void Load(LPCSTR filename);
+	virtual void LoadValuesFromConfig(std::string configFile);
+
+	ID3DXEffect* GetEffect() { return m_pEffect; }
 
 	virtual void Clean();
 

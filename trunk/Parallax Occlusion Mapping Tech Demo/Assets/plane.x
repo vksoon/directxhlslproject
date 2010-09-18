@@ -102,14 +102,6 @@ template MeshMaterialList {
  [Material]
 }
 
-template MeshNormals {
- <F6F23F43-7686-11cf-8F52-0040333594A3>
- DWORD nNormals;
- array Vector normals[nNormals];
- DWORD nFaceNormals;
- array MeshFace faceNormals[nFaceNormals];
-}
-
 template MeshVertexColors {
  <1630B821-7842-11cf-8F52-0040333594A3>
  DWORD nVertexColors;
@@ -174,18 +166,6 @@ Mesh Unnamed_5 {
       "Assets\stones.bmp";
      }
      }
- }
-  MeshNormals {
- 4;
- 0.000000;-1.000000;0.000000;,
- 0.000000;-1.000000;0.000000;,
- 0.000000;-1.000000;0.000000;,
- 0.000000;-1.000000;0.000000;;
-
-
- 2;
- 3;0,1,2;,
- 3;0,2,3;;
  }
   MeshTextureCoords {
     4;

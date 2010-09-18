@@ -1,6 +1,9 @@
 /*
-	GameState Base Class
-	Inherit for Game Specific Game States
+	--------------------
+	| GameState (Base) |
+	--------------------
+
+	Derive Game Specific Game States
 
 	Shaun Mitchell
 */
@@ -14,7 +17,10 @@ class GameState
 {
 public:
 
-	virtual void Init() = 0;
+	std::map<std::string, GameObject*> GetGameObjects() { return m_gameObjects; }
+	GameObject* GetGameObject(std::string id) { return m_gameObjects[id]; }
+
+	virtual bool Init() = 0;
 	virtual void Clean() = 0;
 
 	virtual void Pause() = 0;
@@ -23,7 +29,7 @@ public:
 	virtual void HandleInput(Game* game)= 0;
 	virtual void HandleCollisions(Game* game) = 0;
 	virtual void Update(Game* game, float dt) = 0;
-	virtual void Render(Game* game) = 0;
+	virtual void Draw(Game* game) = 0;
 
 	void ChangeState(Game* game, GameState* state)
 	{
@@ -32,6 +38,9 @@ public:
 
 protected:
 	GameState() {}
+
+	typedef std::map<std::string, GameObject*> GameObjects;
+	GameObjects m_gameObjects;
 };
 
 #endif

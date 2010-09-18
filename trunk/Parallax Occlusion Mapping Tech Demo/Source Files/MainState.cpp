@@ -4,154 +4,104 @@
 #include "../Headers/Game.h"
 #include "../Headers/MainState.h"
 #include "../Headers/GameObject.h"
+#include "../Headers/FontManager.h"
 #include <assert.h>
 #include <iostream>
+#include <math.h>
+#include <string>
 
 MainState MainState::m_MainState;
 
-float m_angleY = 0;
-float m_angleZ = 0;
+#define PI = 3.14159265;
 
-D3DXVECTOR4 AmbientColour(0.5,0.5,0.5,0.5);
-D3DXVECTOR4 AmbientColour2(1,0,0,1);
-D3DXVECTOR4 DiffuseColour(1,1,1,1);
-D3DXVECTOR4 SpecularColour(1,1,1,1);
-D3DCOLOR backgroundColour = 0x0000ff;
-
-bool Active;
-
-float HeightMapScale = 0.0f;
-float SpecularExponent = 10000.0f;
-float ShadowSoftening = 0.0f;
-
-
-void MainState::Init()
+bool MainState::Init()
 {
-	// Camera
-	CameraObj::Instance()->Load("FirstPerson");
+	// Initialize defaults for Tweak Bar
+	depth = 0.02f;
+	MinSamples = 8;
+	MaxSamples = 50;
+	TextureRepeat = 5.0f;
+	LevelOfDetailThreshold = 100;
+
+	// Load Camera
+	CameraObj::Instance()->Load("Static");
+
+	// Create a font // 20 in size // OCR A Std
+	FontManagerObj::Instance()->FMCreateFont("FirstFont", 17, "OCR A Std");
+
+	// Get the view port to set accurate values in TweakBar
+	D3DVIEWPORT9 mainViewPort;
+	D3DObj::Instance()->GetDeviceClass()->GetViewport(&mainViewPort);
+
+	UINT width = mainViewPort.Width;
+	UINT height = mainViewPort.Height;
+
+	// Init TweakBar
+	TwInit(TW_DIRECT3D9, D3DObj::Instance()->GetDeviceClass());
+
+	// Create a TweakBar
+	TwBar * bar = TwNewBar("Shader Values");
+
+	// Set window size in TweakBar
+	TwWindowSize(width,height);
+
+	TwDefine(" GLOBAL help='Change Colours and values of POM shader with tweak bar' "); // Message added to the help bar.
+
+	TwAddVarRW(bar, "Depth", TW_TYPE_FLOAT, &depth, " label='Parallax Depth' min=0 max=0.1 step=0.01 ");
+	TwAddVarRW(bar, "MinSamples", TW_TYPE_INT32, &MinSamples, " label='Min Samples' min=0 max=10 step=1 ");
+	TwAddVarRW(bar, "MaxSamples", TW_TYPE_INT32, &MaxSamples, " label='Min Samples' min=50 max=100 step=1 ");
+	TwAddVarRW(bar, "TextureRepeat", TW_TYPE_FLOAT, &TextureRepeat, " label='Texture Repeat' min=1 max=10 step=1 ");
+	TwAddVarRW(bar, "LevelOfDetailThreshold", TW_TYPE_INT32, &LevelOfDetailThreshold, " label='Level of Detail' min=0 max=2000 step=10 ");
 
 	waterMovement = 0;
 
-	UINT width = D3DObj::Instance()->GetParameters().BackBufferWidth;
-	UINT height = D3DObj::Instance()->GetParameters().BackBufferHeight;
+	// Create a factory and register some GameObjects
+	Factory<GameObject> GameObjectFactory;
+	GameObjectFactory.Register("GameObject", new Creator<GameObject, GameObject>);
+	GameObjectFactory.Register("Player", new Creator<Player, GameObject>);
+	GameObjectFactory.Register("MapObject", new Creator<MapObject, GameObject>);
+	GameObjectFactory.Register("SkyBox", new Creator<SkyBox, GameObject>);
 
-	TwInit(TW_DIRECT3D9, D3DObj::Instance()->GetDeviceClass());
+	// Create a new file to open
+	File config;
 
-	TwBar *pShaderBar = TwNewBar("ShaderValues");
+	// Open the file for this state
+	config.Open("ConfigFiles/MainStateConfig.txt");
 
-	TwWindowSize(width, height);
+	// Load Game Objects from file
+	while(!config.EndOfFile())
+	{
+		std::string typeName;
+		config.GetString(&typeName);
 
-	TwDefine(" GLOBAL help='Change Colours and values of POM shader with tweak bar' "); // Message added to the help bar.
-	TwDefine("ShaderValues color='255 0 0' text=light "); // Change TweakBar color and use dark text
+		if (typeName.empty() || typeName[0] == '#')
+		{
+			return true;
+		}
 
-	TwAddVarRW(pShaderBar, "AmbientColour", TW_TYPE_COLOR3F, &AmbientColour, " label='Ambient Material Colour' colormode=rgb");
-	TwAddVarRW(pShaderBar, "DiffuseColour", TW_TYPE_COLOR3F, &DiffuseColour, " label='Diffuse Material Colour' colormode=rgb");
-	TwAddVarRW(pShaderBar, "SpecularColour", TW_TYPE_COLOR3F, &SpecularColour, " label='Specular Material Colour' colormode=rgb");
-	TwAddVarRW(pShaderBar, "HeightMapScale", TW_TYPE_FLOAT, &HeightMapScale, " label='Height Map Scale' min=0 max=0.1 step=0.01");
-	TwAddVarRW(pShaderBar, "SpecularExponent", TW_TYPE_FLOAT, &SpecularExponent, " label='Specular Exponent' min=0 max=10000 step=1.0");
-	TwAddVarRW(pShaderBar, "ShadowSoftening", TW_TYPE_FLOAT, &ShadowSoftening, " label='Shadow Softening' min=0 max=10.0 step=0.1");
+		GameObject* pMyNewGameObject = GameObjectFactory.Create(typeName);
+		pMyNewGameObject->Load(&config);
 
-	TwAddVarRW(pShaderBar, "backgroundColour", TW_TYPE_COLOR32, &backgroundColour, " label='Background Colour' colormode=rgb");
+		// Add Game Objects to m_gameObjects map
+		std::string id = pMyNewGameObject->GetID();
+		m_gameObjects[id] = pMyNewGameObject;
+	}
 
-	pBottomFloor = new GameObject();
-	pBottomFloor->Load(L"Assets/plane.x", L"Assets/floor.jpg", L"Assets/floor_NRM.png"); 
+	// Set some values in shader if needed // 
+	float spec = 0;
+	GetGameObject("Floor")->GetEffect()->GetEffect()->SetValue("SpecularExponent", &spec, sizeof(spec));
 
-	pFloor = new GameObject();
-	pFloor->Load(L"Assets/plane.x", L"Assets/water.png", L"Assets/water_NRM.png"); 
-
-	pSky = new GameObject();
-	pSky->Load(L"Assets/plane.x", L"Assets/sky.jpg", L"Assets/sky.jpg"); 
-
-	pRightWall = new GameObject();
-	pRightWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
-
-	pLeftWall = new GameObject();
-	pLeftWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
-
-	pBackWall = new GameObject();
-	pBackWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
-
-	pFrontWall = new GameObject();
-	pFrontWall->Load(L"Assets/plane.x", L"Assets/stones.bmp", L"Assets/stones_NM_height.tga");
-
-
-	pPlayer = new Player();
-	pPlayer->Load(L"DwarfWithEffectInstance.x", NULL, NULL);
-
-	pFloor->SetOverallScale(1.0f);
-	pBottomFloor->SetOverallScale(1.0f);
-	pPlayer->SetOverallScale(20.0f);
-	pPlayer->SetXPosition(0.0f);
-	pPlayer->SetYPosition(-30.0f);
-	pPlayer->SetZPosition(0.0f);
-	pFloor->SetXPosition(0.0f);
-	pFloor->SetYPosition(10.0f);
-	pFloor->SetZPosition(0.0f);
-	pBottomFloor->SetXPosition(0.0f);
-	pBottomFloor->SetYPosition(0.0f);
-	pBottomFloor->SetZPosition(0.0f);
-	D3DXVECTOR4 specularColour(0,0,0,0);
-	pBottomFloor->GetEffect()->GetEffect()->SetValue("MaterialSpecularColour", &specularColour, sizeof(specularColour));
-	
-
-	float trfloor = 5.0;
-	float blend = true;
-	pFloor->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &trfloor, sizeof(trfloor));
-	pFloor->GetEffect()->GetEffect()->SetValue("MaterialSpecularColour", &specularColour, sizeof(specularColour));
-	pFloor->GetEffect()->GetEffect()->SetValue("transparency", &blend, sizeof(blend));
-
-	pRightWall->SetZRotation(D3DX_PI / 2);
-	pRightWall->SetXPosition(25.0f);
-	pRightWall->SetYPosition(0.0f);
-	pRightWall->SetZPosition(0.0f);
-	pRightWall->SetOverallScale(1.0f);
-
-	pBackWall->SetXRotation(-D3DX_PI / 2);
-	pBackWall->SetZRotation(D3DX_PI / 2);
-	pBackWall->SetXPosition(-30.0f);
-	pBackWall->SetYPosition(0.0f);
-	pBackWall->SetZPosition(0.0f);
-	pBackWall->SetOverallScale(1.0f);
-
-	pFrontWall->SetXRotation(D3DX_PI / 2);
-	pFrontWall->SetZRotation(D3DX_PI / 2);
-	pFrontWall->SetXPosition(30.0f);
-	pFrontWall->SetYPosition(0.0f);
-	pFrontWall->SetZPosition(-120.0f);
-	pFrontWall->SetOverallScale(1.0f);
-
-	pLeftWall->SetZRotation(-D3DX_PI / 2);
-	pLeftWall->SetXPosition(-30.0f);
-	pLeftWall->SetYPosition(0.0f);
-	pLeftWall->SetZPosition(0.0f);
-	pLeftWall->SetOverallScale(1.0f);
-
-	pSky->SetZRotation(D3DX_PI);
-	pSky->SetXPosition(0.0f);
-	pSky->SetYPosition(30.0f);
-	pSky->SetZPosition(0.0f);
-	pSky->SetOverallScale(1.0f);
-	float tr = 1.0;
-	pSky->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &tr, sizeof(tr));
-
-	GameObject::GameObjects.push_back(pBottomFloor);
-	GameObject::GameObjects.push_back(pSky);
-	GameObject::GameObjects.push_back(pRightWall);
-	GameObject::GameObjects.push_back(pLeftWall);
-	GameObject::GameObjects.push_back(pBackWall);
-	GameObject::GameObjects.push_back(pFrontWall);
-	GameObject::GameObjects.push_back(pPlayer);
-	GameObject::GameObjects.push_back(pFloor);
+	return true;
 }
 
 // Free textures and memory
 void MainState::Clean()
 {
-
-	for(unsigned int i = 0;i < GameObject::GameObjects.size();i++) {
-		if(!GameObject::GameObjects[i]) continue;
-
-		GameObject::GameObjects[i]->Clean();
+	// Clean Game Objects
+	for(GameObjects::iterator it = m_gameObjects.begin(); it != m_gameObjects.end(); ++it)
+	{
+		GameObject* p = it->second;
+		p->Clean();
 	}
 
 	// Free Effects // vector is only for making sure effects get deleted.
@@ -160,6 +110,13 @@ void MainState::Clean()
 		if(!Effect::Effects[i]) continue;
 		Effect::Effects[i]->Release();
 	}
+
+	// Release TweakBar
+	TwTerminate();
+
+	// Release fonts from Fonts Map
+	FontManagerObj::Instance()->FMClean();
+	InputManagerObj::Instance()->Clean();
 }
 
 // Pause this state
@@ -175,14 +132,14 @@ void MainState::Resume()
 // Handle Input using InputManager
 void MainState::HandleInput(Game* game)
 {
-	if(InputManagerObj::Instance()->KeyPressed(DIK_RIGHT))
+	// Set camera type with mouse click 
+	if(InputManagerObj::Instance()->MouseButtonDown(1))
 	{
-		m_angleY += 0.1f;
+		CameraObj::Instance()->SetType("FirstPerson");
 	}
-
-	if(InputManagerObj::Instance()->KeyPressed(DIK_LEFT))
+	else
 	{
-		m_angleY -= 0.1f;
+		CameraObj::Instance()->SetType("Static");
 	}
 }
 
@@ -194,44 +151,67 @@ void MainState::HandleCollisions(Game* game)
 // Update the state
 void MainState::Update(Game* game, float dt) 
 {
-	if(Active)
+	// Update Game Objects
+	for(GameObjects::iterator it = m_gameObjects.begin(); it != m_gameObjects.end(); ++it)
 	{
-		pFloor->GetEffect()->GetEffect()->SetValue("MaterialAmbientColour", &AmbientColour2, sizeof(AmbientColour2));
+		GameObject* p = it->second;
+		p->Update(dt);
 	}
-	pPlayer->SetYRotation(m_angleY);
-	pFloor->GetEffect()->GetEffect()->SetValue("MaterialAmbientColour", &AmbientColour, sizeof(AmbientColour));
-	pFloor->GetEffect()->GetEffect()->SetValue("MaterialDiffuseColour", &DiffuseColour, sizeof(DiffuseColour));
-	pFloor->GetEffect()->GetEffect()->SetValue("MaterialSpecularColour", &SpecularColour, sizeof(SpecularColour));
-	pFloor->GetEffect()->GetEffect()->SetValue("HeightMapScale", &HeightMapScale, sizeof(HeightMapScale));
-	pFloor->GetEffect()->GetEffect()->SetValue("SpecularExponent", &SpecularExponent, sizeof(SpecularExponent));
-	pFloor->GetEffect()->GetEffect()->SetValue("ShadowSoftening", &ShadowSoftening, sizeof(ShadowSoftening));
 
-	for(unsigned int i = 0;i < GameObject::GameObjects.size();i++) {
-		if(!GameObject::GameObjects[i]) continue;
-
-		GameObject::GameObjects[i]->Update(dt);
-	}
+	// Update Input Manager
 	InputManagerObj::Instance()->Update();
 
+	// Pass in the amount of texture movement for water movement
 	waterMovement += dt / 100;
-	pFloor->GetEffect()->GetEffect()->SetValue("dt", &waterMovement, sizeof(waterMovement));
+	GetGameObject("Water")->GetEffect()->GetEffect()->SetValue("WaterMovement", &waterMovement, sizeof(waterMovement));
+
+	
+	// Values for TweakBar // Eugh! // TODO : Wrap up TweakBar
+	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+		sizeof(LevelOfDetailThreshold));
+	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+		sizeof(LevelOfDetailThreshold));
+	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+		sizeof(LevelOfDetailThreshold));
+	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+		sizeof(LevelOfDetailThreshold));
 }
 
 // Render the state
-void MainState::Render(Game* game) 
+void MainState::Draw(Game* game) 
 {
-
-	D3DObj::Instance()->GetDeviceClass()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, backgroundColour, 1.0f, 1);
+	D3DObj::Instance()->GetDeviceClass()->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00000, 1.0f, 1);
 
 	D3DObj::Instance()->GetDeviceClass()->BeginScene();
 
-	for(unsigned int i = 0; i < GameObject::GameObjects.size(); i++) {
-		if(!GameObject::GameObjects[i]) continue;
-
-		GameObject::GameObjects[i]->Render();
+	// Draw Game Objects
+	for(GameObjects::iterator it = m_gameObjects.begin(); it != m_gameObjects.end(); ++it)
+	{
+		GameObject* p = it->second;
+		p->Draw();
 	}
-
+	// Draw the tweak bar
 	TwDraw();
+
+	// Draw Fonts
+	FontManagerObj::Instance()->FMDrawText("FirstFont", 250, 10, 700, 100, "Hold Right Mouse Button to Rotate Camera", 255, 255, 255);
+	FontManagerObj::Instance()->FMDrawText("FirstFont", 250, 30, 700, 100, "           W A S D to Move Camera", 255, 255, 255);
 
 	D3DObj::Instance()->GetDeviceClass()->EndScene();   
 

@@ -1,0 +1,4 @@
+AmbientRed=0.0
+AmbientGreen=0.0
+AmbientBlue=0.0
+AmbientAlpha=1.0

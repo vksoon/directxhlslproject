@@ -21,7 +21,6 @@
 
 #include <AntTweakBar.h>
 
-
 class D3DObject
 {
 	public:

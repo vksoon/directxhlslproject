@@ -4617,7 +4617,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Weapons.dds";
+        "Assets\\Dwarf\\Weapons.dds";
        }
 
        EffectInstance {
@@ -7080,7 +7080,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Pack.dds";
+        "Assets\\Dwarf\\Pack.dds";
        }
       }
      }
@@ -31225,7 +31225,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Body.dds";
+        "Assets\\Dwarf\\Body.dds";
        }
       }
 
@@ -31236,7 +31236,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Body.dds";
+        "Assets\\Dwarf\\Body.dds";
        }
       }
 
@@ -31247,7 +31247,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Body.dds";
+        "Assets\\Dwarf\\Body.dds";
        }
       }
 
@@ -31258,7 +31258,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Body.dds";
+        "Assets\\Dwarf\\Body.dds";
        }
       }
      }
@@ -57215,7 +57215,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Armor.dds";
+        "Assets\\Dwarf\\Armor.dds";
        }
        
        EffectInstance {
@@ -65814,7 +65814,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "Headgear.dds";
+        "Assets\\Dwarf\\Headgear.dds";
        }
       }
      }
@@ -76941,7 +76941,7 @@ Frame DXCC_ROOT {
        0.000000;0.000000;0.000000;;
 
        TextureFilename {
-        "DwarfHead.dds";
+        "Assets\\Dwarf\\DwarfHead.dds";
        }
       }
      }

@@ -1,7 +1,17 @@
 /*
-Game Object Base Class
-Shaun Mitchell
+    --------------------
+	| GameObject (Base)|
+	--------------------
+
+	Derive specific Game Objects
+
+	Contains Get and Set for all Translation, Scaling and Rotation Matrices
+	Contains Velocity
+	Contains Mesh
+
+	Shaun Mitchell
 */
+
 #ifndef _GAME_OBJECT_H_
 #define _GAME_OBJECT_H_
 
@@ -10,30 +20,29 @@ Shaun Mitchell
 
 #include "../Headers/Vec3.h"
 #include "../Headers/Camera.h"
-#include "../Headers/Effect.h"
+#include "../Headers/ParallaxOcclusionMappingEffect.h"
 #include "../Headers/D3DObject.h"
+#include "../Headers/Factory.h"
 
 #define CUSTOMFVF (D3DFVF_XYZ | D3DFVF_TEX1)
 
 struct CUSTOMVERTEX
 {
-    FLOAT x, y, z;    // from the D3DFVF_XYZRHW flag
+    FLOAT x, y, z;   
 	float u, v;
 };
 
-
-
-// Game Object Base Class, Derive specific objects
 class GameObject
 {
 public:
-	static std::vector<GameObject*>   GameObjects;
 
 	virtual ~GameObject() {}
 	GameObject();
 
-	virtual bool Load(LPCWSTR meshFile, LPCWSTR textureFile, LPCWSTR mapFile);
-	virtual void Render();
+	virtual const char * GetClassName() { return "GameObject";}
+
+	virtual bool Load(File * pFile);
+	virtual void Draw();
 	virtual void Update(float dt);
 	virtual void Clean();
 
@@ -78,7 +87,13 @@ public:
 	D3DXMATRIX GetWorldMatrix();
 	D3DXMATRIX GetTranslate();
 
+	LPD3DXMESH GetMesh() { return m_pMesh; }
+
+	std::string GetID() {return m_id;}
+
 protected:
+
+	std::string m_id;
 
 	Vec3f m_vPos;
 	Vec3f m_vVel;
