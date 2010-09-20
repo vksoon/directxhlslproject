@@ -205,6 +205,10 @@
 				RelativePath=".\Source Files\main.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\Source Files\Particle.cpp"
+				>
+			</File>
 			<Filter
 				Name="Effect Sources"
 				>
@@ -285,6 +289,10 @@
 			</File>
 			<File
 				RelativePath=".\Headers\InputManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Headers\Particle.h"
 				>
 			</File>
 			<File
