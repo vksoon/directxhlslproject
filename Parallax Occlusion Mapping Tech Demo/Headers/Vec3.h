@@ -24,7 +24,14 @@ struct Vec3
         z += v.z;
     }
 
-    Vec3& operator*(T t)
+	void operator-=(const Vec3& v)
+	{
+		x -= v.x;
+		y -= v.y;
+		z -= v.z;
+	}
+
+    Vec3& operator*=(T t)
     {
         x *= t;
         y *= t;
@@ -55,7 +62,7 @@ struct Vec3
 			x * v.y - y * v.x);
 	}
 
-	Vec3<T, RESULT> operator-(const Vec3<T, RESULT>& v)
+	Vec3<T, RESULT> operator-(const Vec3<T, RESULT>& v) const
 	{
 		return Vec3<T, RESULT>(x - v.z, y - v.y, z - v.z);
 	}
@@ -63,9 +70,10 @@ struct Vec3
 	void Normalize()
 	{
 		RESULT length = Length();
-		x /= length;
-		y /= length;
-		z /= length;
+		if ( length > 0)
+		{
+			(*this)*=((float)1)/ length;
+		}
 	}
 };
 
@@ -76,6 +84,21 @@ Vec3<T> operator+(const Vec3<T>& a, const Vec3<T>& b)
 	res += b;
 	return res;
 }
+
+template <class T>
+Vec3<T> operator*(const Vec3<T>& a, T f)
+{
+	Vec3<T> res = a;
+	res *= f;
+	return res;
+}
+
+template <class T>
+float DotProduct(const Vec3<T>& a, const Vec3<T>& b)
+{
+	return a.X() * b.X()  + a.Y() * b.Y()  + a.Z() * b.Z();
+}
+
 typedef Vec3<float, float> Vec3f;
 typedef Vec3<int, int> Vec3i;
 
