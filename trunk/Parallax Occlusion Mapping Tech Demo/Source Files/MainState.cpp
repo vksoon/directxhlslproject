@@ -12,8 +12,6 @@
 
 MainState MainState::m_MainState;
 
-#define PI = 3.14159265;
-
 bool MainState::Init()
 {
 	// Initialize defaults for Tweak Bar
@@ -90,6 +88,7 @@ bool MainState::Init()
 	// Set some values in shader if needed // 
 	float spec = 0;
 	GetGameObject("Floor")->GetEffect()->GetEffect()->SetValue("SpecularExponent", &spec, sizeof(spec));
+	GetGameObject("Crate")->SetPhysics();
 
 	return true;
 }
