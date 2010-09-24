@@ -12,6 +12,24 @@ Assets/SkyBox/skybox2.x
 0
 10
 
+MapObject
+Crate
+Assets/crate.x
+Assets/crate.tga
+Assets/crate_NRM.tga
+ConfigFiles/ParallaxOneTexture.txt
+0
+0
+0
+0
+0
+0
+-30
+-20
+0
+0.4
+
+
 Player
 Dwarf
 Assets/Dwarf/DwarfWithEffectInstance.x
@@ -129,22 +147,6 @@ ConfigFiles/ParallaxOcclusionRockFloor.txt
 0
 1
 
-MapObject
-Crate
-Assets/crate.x
-Assets/crate.tga
-Assets/crate_NRM.tga
-ConfigFiles/ParallaxOneTexture.txt
-0
-0
-0
-0
-0
-0
--30
--20
-0
-0.4
 
 
 
