@@ -25,7 +25,7 @@ public:
 	virtual void Load(LPCSTR filename);
 	virtual void LoadValuesFromConfig(std::string configFile);
 
-	ID3DXEffect* GetEffect() { return m_pEffect; }
+	ID3DXEffect* Get() { return m_pEffect; }
 
 	virtual void Clean();
 

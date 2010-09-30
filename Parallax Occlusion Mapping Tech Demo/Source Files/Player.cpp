@@ -210,12 +210,12 @@ void Player::Draw()
 
 	D3DXMATRIX EyePoint = CameraObj::Instance()->GetEyePoint();
 
-	m_pBumpMapEffect->GetEffect()->SetValue("ViewVector", &EyePoint, sizeof(EyePoint));
+	m_pBumpMapEffect->Get()->SetValue("ViewVector", &EyePoint, sizeof(EyePoint));
 
-	m_pBumpMapEffect->GetEffect()->SetValue("World", &mWorld, sizeof(mWorld));
-	m_pBumpMapEffect->GetEffect()->SetValue("Projection", &mProjection, sizeof(mProjection));
+	m_pBumpMapEffect->Get()->SetValue("World", &mWorld, sizeof(mWorld));
+	m_pBumpMapEffect->Get()->SetValue("Projection", &mProjection, sizeof(mProjection));
 
-	m_pBumpMapEffect->GetEffect()->SetValue("View", &mView, sizeof(mView));
+	m_pBumpMapEffect->Get()->SetValue("View", &mView, sizeof(mView));
 
 	// Get Inverse Transpose of World Matrix
 	D3DXMATRIX m;
@@ -224,35 +224,35 @@ void Player::Draw()
 	D3DXMatrixTranspose(&j, &m );
 	D3DXMATRIX inv = j;
 
-	m_pBumpMapEffect->GetEffect()->SetMatrix("WorldInverseTranspose", &inv);
+	m_pBumpMapEffect->Get()->SetMatrix("WorldInverseTranspose", &inv);
 
-	m_pBumpMapEffect->GetEffect()->SetTechnique("BumpMapped");
+	m_pBumpMapEffect->Get()->SetTechnique("BumpMapped");
 
 	UINT iPass, cPasses;
 
-	m_pBumpMapEffect->GetEffect()->Begin(&cPasses,0);
+	m_pBumpMapEffect->Get()->Begin(&cPasses,0);
 
 	for(iPass = 0; iPass < cPasses; iPass++)
 	{
-		m_pBumpMapEffect->GetEffect()->BeginPass(iPass);
+		m_pBumpMapEffect->Get()->BeginPass(iPass);
 
 		for (DWORD i=0; i < m_dwNumMaterials; i++)
 		{
 			// Set the material and texture for this subset
 			D3DObj::Instance()->GetDeviceClass()->SetMaterial(&m_pMeshMaterials[i]);
 			D3DObj::Instance()->GetDeviceClass()->SetTexture(0,m_pMeshTextures[i]);
-			m_pBumpMapEffect->GetEffect()->SetTexture("ModelTexture", m_pMeshTextures[i]);
-			m_pBumpMapEffect->GetEffect()->CommitChanges();
-			m_pBumpMapEffect->GetEffect()->SetTexture("NormalMap", m_bumpTextures[i]);
-			m_pBumpMapEffect->GetEffect()->CommitChanges();
+			m_pBumpMapEffect->Get()->SetTexture("ModelTexture", m_pMeshTextures[i]);
+			m_pBumpMapEffect->Get()->CommitChanges();
+			m_pBumpMapEffect->Get()->SetTexture("NormalMap", m_bumpTextures[i]);
+			m_pBumpMapEffect->Get()->CommitChanges();
 
 			// Draw the mesh subset
 			m_pMesh->DrawSubset( i );
 		}
 
-		m_pBumpMapEffect->GetEffect()->EndPass();
+		m_pBumpMapEffect->Get()->EndPass();
 	}
-	m_pBumpMapEffect->GetEffect()->End();
+	m_pBumpMapEffect->Get()->End();
 }
 
 void Player::Update(float dt)

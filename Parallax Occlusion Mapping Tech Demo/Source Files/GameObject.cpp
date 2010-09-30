@@ -20,10 +20,6 @@ void GameObject::Draw()
 {
 }
 
-void GameObject::SetPhysics()
-{
-}
-
 Effect* GameObject::GetEffect()
 {
 	return m_pEffect;

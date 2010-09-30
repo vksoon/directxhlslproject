@@ -46,8 +46,6 @@ public:
 	virtual void Update(float dt);
 	virtual void Clean();
 
-	virtual void SetPhysics();
-
 	virtual Effect* GetEffect();
 
 	// Added Get and Set functions  // Position & Velocity

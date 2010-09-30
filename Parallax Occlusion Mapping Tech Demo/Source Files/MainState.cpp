@@ -47,7 +47,7 @@ bool MainState::Init()
 
 	TwAddVarRW(bar, "Depth", TW_TYPE_FLOAT, &depth, " label='Parallax Depth' min=0 max=0.1 step=0.01 ");
 	TwAddVarRW(bar, "MinSamples", TW_TYPE_INT32, &MinSamples, " label='Min Samples' min=0 max=10 step=1 ");
-	TwAddVarRW(bar, "MaxSamples", TW_TYPE_INT32, &MaxSamples, " label='Min Samples' min=50 max=100 step=1 ");
+	TwAddVarRW(bar, "MaxSamples", TW_TYPE_INT32, &MaxSamples, " label='Max Samples' min=50 max=100 step=1 ");
 	TwAddVarRW(bar, "TextureRepeat", TW_TYPE_FLOAT, &TextureRepeat, " label='Texture Repeat' min=1 max=10 step=1 ");
 	TwAddVarRW(bar, "LevelOfDetailThreshold", TW_TYPE_INT32, &LevelOfDetailThreshold, " label='Level of Detail' min=0 max=2000 step=10 ");
 
@@ -87,9 +87,7 @@ bool MainState::Init()
 
 	// Set some values in shader if needed // 
 	float spec = 0;
-	GetGameObject("Floor")->GetEffect()->GetEffect()->SetValue("SpecularExponent", &spec, sizeof(spec));
-	GetGameObject("Crate")->SetPhysics();
-
+	GetGameObject("Floor")->GetEffect()->Get()->SetValue("SpecularExponent", &spec, sizeof(spec));
 	return true;
 }
 
@@ -162,33 +160,33 @@ void MainState::Update(Game* game, float dt)
 
 	// Pass in the amount of texture movement for water movement
 	waterMovement += dt / 100;
-	GetGameObject("Water")->GetEffect()->GetEffect()->SetValue("WaterMovement", &waterMovement, sizeof(waterMovement));
+	GetGameObject("Water")->GetEffect()->Get()->SetValue("WaterMovement", &waterMovement, sizeof(waterMovement));
 
 	
 	// Values for TweakBar // Eugh! // TODO : Wrap up TweakBar
-	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
-	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
-	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
-	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("HeightMapScale", &depth, sizeof(depth));
-	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
-	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
-	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
-	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
-	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
-	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
-	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
-	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
-	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
-	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
-	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
-	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
-	GetGameObject("FrontWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+	GetGameObject("FrontWall")->GetEffect()->Get()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("BackWall")->GetEffect()->Get()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("LeftWall")->GetEffect()->Get()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("RightWall")->GetEffect()->Get()->SetValue("HeightMapScale", &depth, sizeof(depth));
+	GetGameObject("FrontWall")->GetEffect()->Get()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("BackWall")->GetEffect()->Get()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("LeftWall")->GetEffect()->Get()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("RightWall")->GetEffect()->Get()->SetValue("MinSamples", &MinSamples, sizeof(MinSamples));
+	GetGameObject("FrontWall")->GetEffect()->Get()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("BackWall")->GetEffect()->Get()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("LeftWall")->GetEffect()->Get()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("RightWall")->GetEffect()->Get()->SetValue("MaxSamples", &MaxSamples, sizeof(MaxSamples));
+	GetGameObject("FrontWall")->GetEffect()->Get()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("BackWall")->GetEffect()->Get()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("LeftWall")->GetEffect()->Get()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("RightWall")->GetEffect()->Get()->SetValue("BaseTextureRepeat", &TextureRepeat, sizeof(TextureRepeat));
+	GetGameObject("FrontWall")->GetEffect()->Get()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
 		sizeof(LevelOfDetailThreshold));
-	GetGameObject("BackWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+	GetGameObject("BackWall")->GetEffect()->Get()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
 		sizeof(LevelOfDetailThreshold));
-	GetGameObject("LeftWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+	GetGameObject("LeftWall")->GetEffect()->Get()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
 		sizeof(LevelOfDetailThreshold));
-	GetGameObject("RightWall")->GetEffect()->GetEffect()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
+	GetGameObject("RightWall")->GetEffect()->Get()->SetValue("LevelOfDetailThreshold", &LevelOfDetailThreshold, 
 		sizeof(LevelOfDetailThreshold));
 }
 
