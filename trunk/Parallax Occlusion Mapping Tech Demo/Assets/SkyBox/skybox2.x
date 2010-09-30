@@ -171,7 +171,7 @@ Mesh Unnamed_0 {
      1.000000;1.000000;1.000000;;
        0.000000;0.000000;0.000000;;
           TextureFilename {
-      "Assets/SkyBox/nightsky_up.bmp";
+      "Assets/SkyBox/nightsky_up.png";
      }
      }
  }
@@ -217,7 +217,7 @@ Mesh Unnamed_1 {
      1.000000;1.000000;1.000000;;
        0.000000;0.000000;0.000000;;
           TextureFilename {
-      "Assets/SkyBox/nightsky_east.bmp";
+      "Assets/SkyBox/nightsky_east.png";
      }
      }
  }
@@ -264,7 +264,7 @@ Mesh Unnamed_2 {
      1.000000;1.000000;1.000000;;
        0.000000;0.000000;0.000000;;
           TextureFilename {
-      "Assets/SkyBox/nightsky_west.bmp";
+      "Assets/SkyBox/nightsky_west.png";
      }
      }
  }
@@ -311,7 +311,7 @@ Mesh Unnamed_3 {
      1.000000;1.000000;1.000000;;
        0.000000;0.000000;0.000000;;
           TextureFilename {
-      "Assets/SkyBox/nightsky_north.bmp";
+      "Assets/SkyBox/nightsky_north.png";
      }
      }
  }
@@ -358,7 +358,7 @@ Mesh Unnamed_4 {
      1.000000;1.000000;1.000000;;
        0.000000;0.000000;0.000000;;
           TextureFilename {
-      "Assets/SkyBox/nightsky_south.bmp";
+      "Assets/SkyBox/nightsky_south.png";
      }
      }
  }
@@ -405,7 +405,7 @@ Mesh Unnamed_5 {
      1.000000;1.000000;1.000000;;
        0.000000;0.000000;0.000000;;
           TextureFilename {
-      "Assets/SkyBox/nightsky_down.bmp";
+      "Assets/SkyBox/nightsky_down.png";
      }
      }
  }

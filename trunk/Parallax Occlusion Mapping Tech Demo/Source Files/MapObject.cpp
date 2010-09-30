@@ -57,6 +57,7 @@ bool MapObject::Load(File * pFile)
 
 	m_pParallaxEffect->Load("Shaders/ParallaxOcclusionMapping.fx");
 	m_pParallaxEffect->LoadValuesFromConfig(shaderConfigFile);
+	
 
 	D3DVERTEXELEMENT9 decl[] = 
 	{
@@ -138,15 +139,15 @@ void MapObject::Draw()
 
 	D3DXMATRIX EyePoint = CameraObj::Instance()->GetEyePoint();
 
-	m_pParallaxEffect->GetEffect()->SetValue("EyeLocation", &EyePoint, sizeof(EyePoint));
+	m_pParallaxEffect->Get()->SetValue("EyeLocation", &EyePoint, sizeof(EyePoint));
 
-	m_pParallaxEffect->GetEffect()->SetValue("World", &mWorld, sizeof(mWorld));
-	m_pParallaxEffect->GetEffect()->SetValue("WorldViewProjection", &mWVP, sizeof(mWVP));
+	m_pParallaxEffect->Get()->SetValue("World", &mWorld, sizeof(mWorld));
+	m_pParallaxEffect->Get()->SetValue("WorldViewProjection", &mWVP, sizeof(mWVP));
 
-	m_pParallaxEffect->GetEffect()->SetValue("View", &mView, sizeof(mView));
+	m_pParallaxEffect->Get()->SetValue("View", &mView, sizeof(mView));
 
-	m_pParallaxEffect->GetEffect()->SetTexture("BaseTexture", m_pTexture);
-	m_pParallaxEffect->GetEffect()->SetTexture("HeightMapTexture", m_pNormalTexture);
+	m_pParallaxEffect->Get()->SetTexture("BaseTexture", m_pTexture);
+	m_pParallaxEffect->Get()->SetTexture("HeightMapTexture", m_pNormalTexture);
 
 	// Get Inverse Transpose of World Matrix
 	D3DXMATRIX m;
@@ -157,21 +158,21 @@ void MapObject::Draw()
 
 	//m_pEffect->GetEffect()->SetMatrix("WorldInverseTranspose", &inv);
 
-	m_pParallaxEffect->GetEffect()->SetTechnique("ParallaxOcclusionMapping");
+	m_pParallaxEffect->Get()->SetTechnique("ParallaxOcclusionMapping");
 	UINT iPass, cPasses;
 
-	m_pParallaxEffect->GetEffect()->Begin(&cPasses,0);
-
+	m_pParallaxEffect->Get()->Begin(&cPasses,0);
+	
 	for(iPass = 0; iPass < cPasses; iPass++)
 	{
-		m_pParallaxEffect->GetEffect()->BeginPass(iPass);
+		m_pParallaxEffect->Get()->BeginPass(iPass);
 
 		// Draw the mesh subset
 		m_pMesh->DrawSubset(0);
 
-		m_pParallaxEffect->GetEffect()->EndPass();
+		m_pParallaxEffect->Get()->EndPass();
 	}
-	m_pParallaxEffect->GetEffect()->End();
+	m_pParallaxEffect->Get()->End();
 
 }
 

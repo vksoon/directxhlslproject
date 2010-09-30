@@ -169,6 +169,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    float2 dxSize, dySize;
    float2 dx, dy;
 
+   // Computing partial derivatives uses the ddx and ddy functions.
    float4( dxSize, dx ) = ddx( float4( TextureCoordinatesPerSize, input.TextureCoordinate ) );
    float4( dySize, dy ) = ddy( float4( TextureCoordinatesPerSize, input.TextureCoordinate ) );
 				  
@@ -197,10 +198,17 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    if ( MipLevel <= (float) LevelOfDetailThreshold )
    {
 	  
+	  // To do determine the number of samples to take and check where the eye vector intersects
+	  // use the dot product of the normalised View vector and Normal vector in world space.
+	  // Lerp between the Max Samples and Min Samples passed in from the config file.
+	  
 	  int NumSteps = (int) lerp( MaxSamples, MinSamples, dot( ViewWorldSpace, NormalWorldSpace ) );
 	  
 	  float CurrHeight = 0.0;
+	  
+	  // Splits the 0.0 - 1.0 amount in height map into pieces determined by NumSteps calculation.
 	  float StepSize   = 1.0 / (float) NumSteps;
+	  
 	  float PrevHeight = 1.0;
 	  float NextHeight = 0.0;
 
@@ -217,6 +225,9 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	   
 	  float2 texOffset2 = 0;
 
+	  // while looping sample the texture coordinate along the parallax offset vector and then compare it to the height map which is stored in the
+	  // alpha channel. If the eye vector is higher in height than the height maps value continue. If eye vector has a lower height than the height map
+	  // then an intersection has been found and it will reside between currHeight and prevHeight.
 	  while ( StepIndex < NumSteps ) 
 	  {
 		 TexCurrentOffset -= TexOffsetPerStep;
