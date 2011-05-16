@@ -6,16 +6,16 @@
 	http://www.gamedev.net/reference/articles/article2325.asp
 */
 
-// The base texture 
+// The colour texture  
 texture BaseTexture;
 
-// The height map texture
+// The Parallax occlusion texture, Normal map with height map in alpha channel
 texture HeightMapTexture;
-
-// Material Properties //
 
 float WaterMovement;
 
+// Material Properties
+// Loaded in from shader config file
 float4 MaterialAmbientColour;
 float4 MaterialDiffuseColour;
 float4 MaterialSpecularColour;
@@ -24,33 +24,31 @@ float SpecularExponent = 10000.0; // Specular exponent of material
 // Lower colour means larger highlight
 
 // Light Values //
+float3 LightDirection; // Direction of light in world space
+float4 DiffuseColour = float4(1,1,1,1); // Lights diffuse colour // Could be loaded from config file
+float4 AmbientColour = float4(1,1,1,1); // Lights ambient colour // Could be loaded from config file
 
-float3 LightDirection;// = float3(0,1,0); // Direction of light in world space
-float4 DiffuseColour = float4(1,1,1,1); // Lights diffuse colour
-float4 AmbientColour = float4(1,1,1,1); // Lights ambient colour
-
-float4 EyeLocation;// = float4(1,0,0,0); // Location of camera
-float BaseTextureRepeat;// = 5.0; // Amount to repeat texture
-float HeightMapScale;// = 0.02;
-
+float4 EyeLocation; // Location of camera
+float BaseTextureRepeat; // Amount to repeat texture // Loaded from config file
+float HeightMapScale; // Loaded from config file
+ 
 // Matrices //
 float4x4 World;
 float4x4 WorldViewProjection;
 float4x4 View;
 
-float2 TextureDimensions;// = float2(512,512);
+float2 TextureDimensions; // Used for accurate calculation of partial derivatives
 
-int LevelOfDetailThreshold = 100;  // Used for performance enhancement
+int LevelOfDetailThreshold = 100;  // Used for performance enhancement // Distance from camera location before using normal mapping instead of POM
 
-float ShadowSoftening = 0.5;
+float ShadowSoftening = 0.5; // Blurriness of realtime shadows
 
-float BlendAlpha = 1;
+float BlendAlpha = 1; // Alpha value
 
-int MinSamples = 8;
-int MaxSamples = 50;
+int MinSamples = 8; // Minimum amount of height map samples
+int MaxSamples = 50; // Maximum amount of height map samples
 
 // Texture Samplers //
-
 sampler BaseSampler =
 sampler_state
 {
@@ -127,26 +125,21 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	float3 ViewWorldSpace = EyeLocation - PositionWorldSpace;
 	output.ViewWorldSpace = ViewWorldSpace;
 
+	// The directional light vector in world space
 	float3 LightWorldSpace = LightDirection;
 	
-	// Create a world to tangent matrix
+	// Create a rotation matrix to transform from world space to tangent space 
+	// using the tangent, binormal and normal vectors:
 	float3x3 WorldToTangentMatrix = float3x3(TangentWorldSpace, BinormalWorldSpace, NormalWorldSpace);
 	
 	// Transform View and light vectors into tangent space
 	output.LightTangentSpace = mul(LightWorldSpace, WorldToTangentMatrix);
 	output.ViewTangentSpace = mul(WorldToTangentMatrix, ViewWorldSpace);
 	
-	// Initial parallax displacement vector 
-	float2 ParallaxDirection = normalize(output.ViewTangentSpace.xy);
+	output.ParallaxOffsetTangentSpace = output.ViewTangentSpace.xy / output.ViewTangentSpace.z;
 	
-	// Compute length of parallax displacement vector, this equates to the amount of displacement
-	float Length = length(output.ViewTangentSpace);
-	float ParallaxLength = sqrt(Length * Length - output.ViewTangentSpace.z * output.ViewTangentSpace.z) / output.ViewTangentSpace.z;
-	
-	// output initial parallax offset in tangent space 
-	output.ParallaxOffsetTangentSpace = ParallaxDirection * ParallaxLength;
-	
-	// output parallax vector multiplied by editable value
+	// Multiply this vector by an editable parameter that can be adjusted for 
+	// different types of surfaces which may require less height contrast:
 	output.ParallaxOffsetTangentSpace *= HeightMapScale;
 	
 	return output;
@@ -154,7 +147,8 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
-	 //  Normalize the interpolated vectors:
+	 // First normalise all the vectors that are input from the vertex shader, this is because 
+	 // in all calculations from now on they will need to be normalised:
    float3 ViewTangentSpace   = normalize( input.ViewTangentSpace  );
    float3 ViewWorldSpace   = normalize( input.ViewWorldSpace  );
    float3 LightTangentSpace  = normalize( input.LightTangentSpace );
@@ -162,10 +156,13 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	 
    float4 ResultColour = float4( 0, 0, 0, 1 );
    
-   // Compute the current gradients:
+   /* 
+      According to Microsoft's MSDN no gradient computations can be made inside a control flow. 
+      This algorithm uses a call to tex2Dgrad so the gradient computations need to be carried out before the loop itself. 
+      This can be computed using the ddx and ddy functions which compute partial derivatives:
+   */
    float2 TextureCoordinatesPerSize = input.TextureCoordinate * TextureDimensions;
 
-   // Compute all 4 derivatives in x and y in a single instruction to optimize:
    float2 dxSize, dySize;
    float2 dx, dy;
 
@@ -198,45 +195,61 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    if ( MipLevel <= (float) LevelOfDetailThreshold )
    {
 	  
-	  // To do determine the number of samples to take and check where the eye vector intersects
-	  // use the dot product of the normalised View vector and Normal vector in world space.
-	  // Lerp between the Max Samples and Min Samples passed in from the config file.
-	  
+	  /* 
+	     The number of samples to take is calculated using the dot product of the View and Normal vectors in world space
+	     this value is used to determine how direct the eye is looking at the surface, the number of samples is calculated
+	     by lerping between the passed in Max and Min samples values.
+	  */
 	  int NumSteps = (int) lerp( MaxSamples, MinSamples, dot( ViewWorldSpace, NormalWorldSpace ) );
 	  
 	  float CurrHeight = 0.0;
 	  
-	  // Splits the 0.0 - 1.0 amount in height map into pieces determined by NumSteps calculation.
+	  // Use this value to create a step size which equates to how far to move along the parallax offset vector for each sample. 
+	  // It is calculated using the maximum value in the height map (1.0) divided by NumSteps:
 	  float StepSize   = 1.0 / (float) NumSteps;
 	  
+	  // To start off the algorithm the previous height value which is what is compared for each sample is set to 1.0 
+	  // which is the highest point.
 	  float PrevHeight = 1.0;
 	  float NextHeight = 0.0;
 
 	  int    StepIndex = 0;
-	  bool   Condition = true;
 
 	  float2 TexOffsetPerStep = StepSize * input.ParallaxOffsetTangentSpace;
 	  float2 TexCurrentOffset = input.TextureCoordinate;
 	  float  CurrentBound     = 1.0;
 	  float  ParallaxAmount   = 0.0;
 
+	  // Create the 2D vectors that will be used as the sampled points 
 	  float2 pt1 = 0;
 	  float2 pt2 = 0;
 	   
 	  float2 texOffset2 = 0;
 
-	  // while looping sample the texture coordinate along the parallax offset vector and then compare it to the height map which is stored in the
-	  // alpha channel. If the eye vector is higher in height than the height maps value continue. If eye vector has a lower height than the height map
-	  // then an intersection has been found and it will reside between currHeight and prevHeight.
+	  /* 
+	     While looping sample the texture coordinate along the parallax offset vector and then compare it to the height map which is stored in the
+	     alpha channel. If the eye vector is higher in height than the height maps value continue. If eye vector has a lower height than the height map
+	     then an intersection has been found and it will reside between currHeight and prevHeight.
+	   */
+	  
+	  // Begin the loop
 	  while ( StepIndex < NumSteps ) 
 	  {
+	     // Backtrace along the parallax offset vector by the StepSize value
 		 TexCurrentOffset -= TexOffsetPerStep;
 
 		 // Sample height map which in this case is stored in the alpha channel of the normal map:
 		 CurrHeight = tex2Dgrad( HeightMapSampler, TexCurrentOffset, dx, dy ).a;
 
+		 // Decrease the current height of the eye vector by the StepSize value
 		 CurrentBound -= StepSize;
 
+		 /* 
+		    Check if the eye vector has a larger height value than the CurrHeight sampled from the 
+		    height map which would mean there has been no intersection yet so increment the StepIndex. 
+		    If there has been an intersection (eye vector has a smaller value than CurrHeight) it will lie 
+		    between pt1 and pt2 which are the current sample point and the previous sampled point.
+		 */
 		 if ( CurrHeight > CurrentBound ) 
 		 {   
 			pt1 = float2( CurrentBound, CurrHeight );
@@ -254,13 +267,13 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 		 }
 	  }   
 
+	  // Find the intersection of the eye vector with the line between pt1 and pt2 to get the current offset texture coordinates:
 	  float Delta2 = pt2.x - pt2.y;
 	  float Delta1 = pt1.x - pt1.y;
 	  
 	  float Denominator = Delta2 - Delta1;
 	  
-	  // SM 3.0 requires a check for divide by zero, since that operation will generate
-	  // an 'Inf' number instead of 0, as previous models (conveniently) did:
+	  // Shader model 3.0 needs a check for divide by 0
 	  if ( Denominator == 0.0f )
 	  {
 		 ParallaxAmount = 0.0f;
@@ -270,6 +283,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 		 ParallaxAmount = (pt1.x * Delta2 - pt2.x * Delta1 ) / Denominator;
 	  }
 	  
+	  // Set the newly found texture coordinates
 	  float2 ParallaxOffset = input.ParallaxOffsetTangentSpace * (1 - ParallaxAmount );
 
 	  // The computed texture offset for the displaced point on the pseudo-extruded surface:
@@ -324,8 +338,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
    float4 Specular = 0;
    float3 ReflectionTangentSpace = normalize( 2 * dot( ViewTangentSpace, NormalTangentSpace ) * NormalTangentSpace - ViewTangentSpace );
 	   
-   
-   float RdotL = saturate( dot( ReflectionTangentSpace, LightTangentSpaceAdj ));
+   float RdotL = saturate(  dot( ReflectionTangentSpace, LightTangentSpaceAdj ));
    Specular = saturate( pow( RdotL, SpecularExponent )) * MaterialSpecularColour;
    
    // Composite the final color:
