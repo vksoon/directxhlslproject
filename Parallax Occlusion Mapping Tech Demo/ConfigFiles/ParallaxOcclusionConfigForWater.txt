@@ -14,15 +14,15 @@ MaterialSpecularBlue=1
 MaterialSpecularAlpha=1
 
 BlendAlpha=0.2
-TextureRepeat=1.0
+TextureRepeat=5.0
 WaterMovement=100
-SpecularExponent=10000
+SpecularExponent=10
 
 LightDirectionX=1
 LightDirectionY=0
 LightDirectionZ=0
 
-HeightMapScale=0.02
+HeightMapScale=0.01
 
 TextureDimensionsX=512
 TextureDimensionsY=512

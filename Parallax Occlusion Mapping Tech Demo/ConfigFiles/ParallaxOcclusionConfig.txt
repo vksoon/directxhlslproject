@@ -20,9 +20,9 @@ LightDirectionZ=0
 BlendAlpha=1.0
 TextureRepeat=5.0
 WaterMovement=0
-SpecularExponent=100000000
+SpecularExponent=1000
 
-HeightMapScale=0.02
+HeightMapScale=-0.02
 
 TextureDimensionsX=100
 TextureDimensionsY=100
